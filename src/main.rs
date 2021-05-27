@@ -1,6 +1,7 @@
 mod ray;
 
 use std::io::{self, Write};
+use std::time::Instant;
 use nalgebra::Vector3;
 use ray::Ray;
 
@@ -29,6 +30,7 @@ pub fn color(ray: &Ray) -> Vector3<f64> {
 }
 
 fn main() {
+    let start = Instant::now();
     // Image
     let aspect_ratio = 16.0/9.0;
     let image_width = 1280;
@@ -61,6 +63,5 @@ fn main() {
             println!("{} {} {}", ir, ig, ib);
         }
     }
-    eprintln!("\nDone.");
-    io::stderr().flush().unwrap();
+    eprintln!("\nFinished! Time elapsed: {}s.", start.elapsed().as_secs());
 }
