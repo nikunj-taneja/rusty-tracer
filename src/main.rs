@@ -1,13 +1,26 @@
 mod ray;
 
-use std::io::{self, Write};
+// use std::io::{self, Write};
 use nalgebra::Vector3;
 use ray::Ray;
 
+fn hit_sphere(center: &Vector3<f64>, radius: f64, ray: &Ray) -> bool {
+    let oc = ray.origin - center;
+    let a = ray.direction.dot(&ray.direction);
+    let b = 2.0 * oc.dot(&ray.direction);
+    let c = oc.dot(&oc) - radius.powi(2);
+    let discriminant = b.powi(2) - 4.0 * a * c;
+    discriminant > 0.0
+}
+
 pub fn color(ray: &Ray) -> Vector3<f64> {
-    let unit_direction = ray.direction.normalize();
-    let t = 0.5*(unit_direction[1] + 1.0);
-    (1.0 - t)*Vector3::new(1.0, 1.0, 1.0) + t*Vector3::new(0.5, 0.7, 1.0)
+    if hit_sphere(&Vector3::new(0.0, 0.0, -1.0), 0.5, ray) {
+        Vector3::new(1.0, 0.0, 0.0)
+    } else {
+        let unit_direction = ray.direction.normalize();
+        let t = 0.5*(unit_direction[1] + 1.0);
+        (1.0 - t)*Vector3::new(1.0, 1.0, 1.0) + t*Vector3::new(0.5, 0.7, 1.0)
+    }
 }
 
 fn main() {
@@ -30,8 +43,8 @@ fn main() {
     println!("P3\n{} {}\n255", image_width, image_height);
 
     for j in (0..image_height).rev() {
-        eprintln!("\rScanlines remaining: {}", j);
-        io::stderr().flush().unwrap();
+        // eprintln!("\rScanlines remaining: {}", j);
+        // io::stderr().flush().unwrap();
         for i in 0..image_width {
             let u = i as f64 / (image_width-1) as f64;
             let v = j as f64 / (image_height-1) as f64;
@@ -43,6 +56,6 @@ fn main() {
             println!("{} {} {}", ir, ig, ib);
         }
     }
-    eprintln!("Done.");
-    io::stderr().flush().unwrap();
+    // eprintln!("Done.");
+    // io::stderr().flush().unwrap();
 }
