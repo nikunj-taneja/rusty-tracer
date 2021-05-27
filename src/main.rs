@@ -1,6 +1,6 @@
 mod ray;
 
-// use std::io::{self, Write};
+use std::io::{self, Write};
 use nalgebra::Vector3;
 use ray::Ray;
 
@@ -48,8 +48,8 @@ fn main() {
     println!("P3\n{} {}\n255", image_width, image_height);
 
     for j in (0..image_height).rev() {
-        // eprintln!("\rScanlines remaining: {}", j);
-        // io::stderr().flush().unwrap();
+        eprint!("\rScanlines remaining: {}", j);
+        io::stderr().flush().unwrap();
         for i in 0..image_width {
             let u = i as f64 / (image_width-1) as f64;
             let v = j as f64 / (image_height-1) as f64;
@@ -61,6 +61,6 @@ fn main() {
             println!("{} {} {}", ir, ig, ib);
         }
     }
-    // eprintln!("Done.");
-    // io::stderr().flush().unwrap();
+    eprintln!("\nDone.");
+    io::stderr().flush().unwrap();
 }
