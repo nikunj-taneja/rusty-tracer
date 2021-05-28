@@ -1,13 +1,16 @@
 mod ray;
+mod utils;
 mod sphere;
+mod camera;
 mod hittable;
 
-use std::io::{self, Write};
-use std::time::Instant;
-use nalgebra::Vector3;
 use ray::Ray;
-use hittable::{Hittable, HittableList};
 use sphere::Sphere;
+use camera::Camera;
+use rand::prelude::*;
+use nalgebra::Vector3;
+use std::time::Instant;
+use hittable::{Hittable, HittableList};
 
 pub fn color(ray: &Ray, world: &HittableList) -> Vector3<f64> {
     if let Some(hit) = world.hit(ray, 0.0, std::f64::MAX) {
@@ -19,12 +22,19 @@ pub fn color(ray: &Ray, world: &HittableList) -> Vector3<f64> {
     }
 }
 
+
+
 fn main() {
     let start = Instant::now();
+    
+    // Random numbers
+    let mut rng = rand::thread_rng();
+
     // Image
     let aspect_ratio = 16.0/9.0;
     let image_width = 1280;
     let image_height = (image_width as f64 /aspect_ratio) as i32;
+    let samples_per_pixel = 100;
 
     // World
     let world = HittableList::new(vec![
@@ -33,32 +43,21 @@ fn main() {
     ]);
 
     // Camera
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
+    let cam = Camera::new();
 
-    let origin = Vector3::new(0.0, 0.0, 0.0);
-    let horizontal = Vector3::new(viewport_width, 0.0, 0.0);
-    let vertical = Vector3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner = origin - horizontal/2.0 - vertical/2.0 - Vector3::new(0.0, 0.0, focal_length);
-    
-    
-
-    // Render
-    println!("P3\n{} {}\n255", image_width, image_height);
-
+    // Render 
+    utils::render_init(&image_width, &image_height);
     for j in (0..image_height).rev() {
-        eprint!("\rRendering image: {}%", ((image_height-j) as f64 / (image_height as f64) * 100.0) as i64);
-        io::stderr().flush().unwrap();
+        utils::print_progress_bar(&j, &image_height);
         for i in 0..image_width {
-            let u = i as f64 / (image_width-1) as f64;
-            let v = j as f64 / (image_height-1) as f64;
-            let r = Ray::new(origin, lower_left_corner + u*horizontal + v*vertical - origin);
-            let col = color(&r, &world);
-            let ir = (255.99 * col[0]) as i32;
-            let ig = (255.99 * col[1]) as i32;
-            let ib = (255.99 * col[2]) as i32;
-            println!("{} {} {}", ir, ig, ib);
+            let mut pixel_color = Vector3::new(0.0, 0.0, 0.0);
+            for _ in 0..samples_per_pixel {
+                let u = (i as f64 + rng.gen::<f64>()) / (image_width-1) as f64;
+                let v = (j as f64 + rng.gen::<f64>())/ (image_height-1) as f64;
+                let r = cam.get_ray(u, v);
+                pixel_color += color(&r, &world);
+            }
+            utils::write_color(pixel_color, samples_per_pixel);
         }
     }
     eprintln!("\nFinished! Time elapsed: {}s.", start.elapsed().as_secs());
