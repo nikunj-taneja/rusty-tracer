@@ -9,6 +9,7 @@ mod hittable;
 use sphere::Sphere;
 use camera::Camera;
 use rand::prelude::*;
+use rayon::prelude::*;
 use nalgebra::Vector3;
 use std::time::Instant;
 use hittable::HittableList;
@@ -16,9 +17,6 @@ use material::{Lambertian, Metal};
 
 fn main() {
     let start = Instant::now();
-    
-    // Random numbers
-    let mut rng = rand::thread_rng();
 
     // Image
     let aspect_ratio = 16.0/9.0;
@@ -40,18 +38,27 @@ fn main() {
 
     // Render 
     utils::render_init(&image_width, &image_height);
-    for j in (0..image_height).rev() {
-        utils::print_progress_bar(&j, &image_height);
-        for i in 0..image_width {
-            let mut pixel_color = Vector3::new(0.0, 0.0, 0.0);
-            for _ in 0..samples_per_pixel {
-                let u = (i as f64 + rng.gen::<f64>()) / (image_width-1) as f64;
-                let v = (j as f64 + rng.gen::<f64>())/ (image_height-1) as f64;
-                let r = cam.get_ray(u, v);
-                pixel_color += utils::color(&r, &world, max_depth);
-            }
-            utils::write_color(pixel_color, samples_per_pixel);
-        }
+
+    let img_pixels = (0..image_height).into_par_iter().rev()
+        .flat_map(|j|
+            (0..image_width).flat_map(|i| {
+                let pixel_color: Vector3<f64> = (0..samples_per_pixel).map(|_| {
+                    let mut rng = rand::thread_rng();
+                    let u = (i as f64 + rng.gen::<f64>()) / (image_width-1) as f64;
+                    let v = (j as f64 + rng.gen::<f64>())/ (image_height-1) as f64;
+                    let ray = cam.get_ray(u, v);
+                    utils::color(&ray, &world, max_depth)
+                }).sum();
+                utils::print_progress_bar(&j, &image_height);
+                pixel_color.iter().map(|c|
+                    (255.99 * (c / samples_per_pixel as f64).sqrt().max(0.0).min(1.0)) as u8
+                ).collect::<Vec<u8>>()
+            }).collect::<Vec<u8>>()
+        ).collect::<Vec<u8>>();
+    
+    for pixel in img_pixels.chunks(3) {
+        println!("{} {} {}", pixel[0], pixel[1], pixel[2]);
     }
+
     eprintln!("\nFinished! Time elapsed: {}s.", start.elapsed().as_secs());
 }

@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use crate::hittable::HitRecord;
 use crate::utils;
 
-pub trait Material {
+pub trait Material: Sync {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Ray, Vector3<f64>)>;
 }
 
