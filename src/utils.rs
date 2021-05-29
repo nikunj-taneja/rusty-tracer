@@ -1,7 +1,6 @@
 use rand::Rng;
 use crate::ray::Ray;
 use nalgebra::Vector3;
-use std::io::{self, Write};
 use crate::hittable::{Hittable, HittableList};
 
 pub fn render_init(image_width: &i32, image_height: &i32) {
