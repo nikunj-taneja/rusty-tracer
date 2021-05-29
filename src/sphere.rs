@@ -1,17 +1,19 @@
 use nalgebra::Vector3;
 use crate::ray::Ray;
+use crate::material::Material;
 use crate::hittable::{Hittable, HitRecord};
 
-pub struct Sphere {
+pub struct Sphere<M: Material> {
     center: Vector3<f64>,
-    radius: f64
+    radius: f64,
+    material: M,
 }
 
-impl Sphere {
-    pub fn new(center: Vector3<f64>, radius: f64) -> Self { Sphere { center, radius } }
+impl<M: Material> Sphere<M> {
+    pub fn new(center: Vector3<f64>, radius: f64, material: M) -> Self { Sphere { center, radius, material } }
 }
 
-impl Hittable for Sphere {
+impl<M: Material> Hittable for Sphere<M> {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = ray.origin - self.center;
         let a = ray.direction.dot(&ray.direction);
@@ -29,6 +31,6 @@ impl Hittable for Sphere {
         }
         let p = ray.point_at_parameter(root);
         let outward_normal: Vector3<f64> = (p - self.center)/self.radius;
-        Some(HitRecord::new(ray, p, root, outward_normal))
+        Some(HitRecord::new(ray, p, root, outward_normal, &self.material))
     }
 }

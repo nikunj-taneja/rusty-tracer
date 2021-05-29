@@ -33,8 +33,11 @@ pub fn color(ray: &Ray, world: &HittableList, depth: usize) -> Vector3<f64> {
         return Vector3::new(0.0, 0.0, 0.0)
     }
     if let Some(hit) = world.hit(ray, 0.001, std::f64::MAX) {
-        let target = hit.p + hit.normal + random_unit_vector();
-        0.5 * color(&Ray::new(hit.p, target - hit.p), world, depth-1)
+        if let Some((scattered, attenuation)) = hit.material.scatter(&ray, &hit) {
+            return attenuation.zip_map(&color(&scattered, &world, depth-1), |l, r| l * r)
+        } else {
+            return Vector3::new(0.0, 0.0, 0.0);
+        }
     } else {
         let unit_direction = ray.direction.normalize();
         let t = 0.5*(unit_direction[1] + 1.0);
@@ -54,4 +57,8 @@ pub fn write_color(pixel_color: Vector3<f64>, samples_per_pixel: usize) {
     let ig = (256.0 * clamp((pixel_color[1]*scale).sqrt(), 0.0, 0.999)) as i32;
     let ib = (256.0 * clamp((pixel_color[2]*scale).sqrt(), 0.0, 0.999)) as i32;
     println!("{} {} {}", ir, ig, ib);
+}
+
+pub fn reflect(v: &Vector3<f64>, n: &Vector3<f64>) -> Vector3<f64> {
+    v - 2.0*v.dot(&n)*n
 }

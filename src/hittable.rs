@@ -1,18 +1,20 @@
 use nalgebra::Vector3;
 use crate::ray::Ray;
+use crate::material::Material;
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub p: Vector3<f64>,
     pub t: f64,
     pub normal: Vector3<f64>,
     pub front_face: bool,
+    pub material: &'a dyn Material,
 }
 
-impl HitRecord {
-    pub fn new(ray: &Ray, p: Vector3<f64>, t: f64, outward_normal: Vector3<f64>) -> Self {
+impl<'a> HitRecord<'a> {
+    pub fn new(ray: &Ray, p: Vector3<f64>, t: f64, outward_normal: Vector3<f64>, material: &'a dyn Material) -> Self {
         let front_face = ray.direction.dot(&outward_normal) < 0.0;
         let normal = if front_face { outward_normal } else { -outward_normal };
-        HitRecord { p, t, normal, front_face }
+        HitRecord { p, t, normal, front_face, material }
     }
 }
 
