@@ -38,7 +38,8 @@ fn main() {
 
     // Render 
     utils::render_init(&image_width, &image_height);
-
+    eprintln!("Rendering image...");
+    
     let img_pixels = (0..image_height).into_par_iter().rev()
         .flat_map(|j|
             (0..image_width).flat_map(|i| {
@@ -49,7 +50,6 @@ fn main() {
                     let ray = cam.get_ray(u, v);
                     utils::color(&ray, &world, max_depth)
                 }).sum();
-                utils::print_progress_bar(&j, &image_height);
                 pixel_color.iter().map(|c|
                     (255.99 * (c / samples_per_pixel as f64).sqrt().max(0.0).min(1.0)) as u8
                 ).collect::<Vec<u8>>()
@@ -60,5 +60,5 @@ fn main() {
         println!("{} {} {}", pixel[0], pixel[1], pixel[2]);
     }
 
-    eprintln!("\nFinished! Time elapsed: {}s.", start.elapsed().as_secs());
+    eprintln!("Done! Time elapsed: {}s.", start.elapsed().as_secs());
 }
